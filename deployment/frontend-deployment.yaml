@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: example-frontend
-          image: jyldyz0610/example-frontend:1.0.1
+          image: jyldyz0610/example-frontend
           imagePullPolicy: IfNotPresent
           resources:
             requests:
