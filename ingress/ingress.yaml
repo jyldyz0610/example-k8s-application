@@ -1,4 +1,3 @@
-# https://kubernetes.io/docs/concepts/services-networking/ingress/
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -7,7 +6,7 @@ metadata:
 spec:
   ingressClassName: nginx
   rules:
-    - host:  ab0cfa1591af444b088314e9137ba3bf-1638149743.eu-central-1.elb.amazonaws.com
+    - host: ab0cfa1591af444b088314e9137ba3bf-1638149743.eu-central-1.elb.amazonaws.com
       http:
         paths:
           - path: /
