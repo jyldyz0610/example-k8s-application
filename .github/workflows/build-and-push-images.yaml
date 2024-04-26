@@ -11,10 +11,10 @@ jobs:
       matrix:
         include:
           - dockerfile: ./backend/Dockerfile
-            image: jyldyz0610/example-backend
+            image: ${{ github.actor }}/example-backend
             context: ./backend
           - dockerfile: ./frontend/Dockerfile
-            image: jyldyz0610/example-frontend
+            image: ${{ github.actor }}/example-frontend
             context: ./frontend
     steps:
       - name: Checkout code
