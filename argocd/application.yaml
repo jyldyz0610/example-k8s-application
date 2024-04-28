@@ -6,7 +6,7 @@ metadata:
 spec:
   project: example-projekt
   source:
-    repoURL: https://github.com/marcolindner/example-k8s-application.git
+    repoURL: https://github.com/jyldyz0610/example-k8s-application.git
     targetRevision: HEAD
     path: deployment
   destination:

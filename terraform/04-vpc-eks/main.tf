@@ -2,6 +2,15 @@ provider "aws" {
   region = var.region
 }
 
+
+provider "helm" {
+  kubernetes {
+    config_path = "~/.kube/config"
+  }
+}
+
+
+
 data "aws_availability_zones" "availibility_zones" {
   filter {
     name   = "opt-in-status"
@@ -74,8 +83,8 @@ resource "null_resource" "update_kubeconfig" {
   } 
 }
 
-resource "helm_release" "ingress_nginx" {
-  name = "ingress_nginx"
+resource "helm_release" "ingress-nginx" {
+  name = "ingress-nginx"
   repository = "https://kubernetes.github.io/ingress-nginx"
   chart = "ingress-nginx"
   create_namespace = true
@@ -90,5 +99,96 @@ resource "helm_release" "argocd" {
   namespace = "argocd"
   
 }
-  
+resource "null_resource" "get_cluster_dns" {
+  depends_on = [module.eks]
+  provisioner "local-exec" {
+    command = "aws eks describe-cluster --name ${var.cluster_name} --query 'cluster.endpoint' --output text | sed 's~^https://~~' | tr '[:upper:]' '[:lower:]' > cluster_dns.txt"
+  }
+}
 
+data "local_file" "cluster_dns" {
+  depends_on = [null_resource.get_cluster_dns]
+  filename   = "${path.module}/cluster_dns.txt"
+}
+
+provider "kubernetes" {
+  config_path    = "~/.kube/config"
+  config_context_cluster = module.eks.cluster_id
+}
+
+resource "kubernetes_ingress_v1" "example" {
+  metadata {
+    name      = "example-ingress"
+    namespace = "default"
+  }
+
+  spec {
+    ingress_class_name = "nginx"
+
+    rule {
+      host = data.local_file.cluster_dns.content
+
+      http {
+        path {
+          path     = "/"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = "example-frontend"
+              port {
+                number = 80
+              }
+            }
+          }
+        }
+
+        path {
+          path     = "/api"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = "example-backend"
+              port {
+                number = 3000
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+resource "kubernetes_ingress_v1" "argocd" {
+  metadata {
+    name      = "argocd-ingress"
+    namespace = "argocd"
+  }
+
+  spec {
+    ingress_class_name = "nginx"
+
+    rule {
+      host = data.local_file.cluster_dns.content
+
+      http {
+        path {
+          path     = "/argo"
+          path_type = "Prefix"
+
+          backend {
+            service {
+              name = "argocd-server"
+              port {
+                number = 80
+              }
+            }
+          }
+        }
+
+      }
+    }
+  }
+}
